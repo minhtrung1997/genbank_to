@@ -40,7 +40,7 @@ def cds_details(seq, feat, complexheader=False, skip_pseudo=True):
 
     Returns None if not a valid feature, so check return
     """
-    if feat.type != 'CDS':
+    if feat.type == 'gene':
         return None
 
     cid = feature_id(seq, feat)
@@ -52,18 +52,18 @@ def cds_details(seq, feat, complexheader=False, skip_pseudo=True):
     if complexheader:
         (start, stop, strand) = (feat.location.start.position, feat.location.end.position, feat.strand)
 
-        loc = f"{start}_{stop}"
+        loc = f"{start}:{stop}"
         if strand < 0:
-            loc = f"{stop}_{start}"
+            loc = f"{stop}:{start}"
 
-        cid += f' [{seq.id}] '
+        cid += f'|[{seq.id}]|'
+        cid += f'|[{seq.id}_{loc}]'
+        if 'product' in feat.qualifiers:
+            cid += f'|{feat.qualifiers["product"][0]}'
+        else:
+            cid += f'|[hypothetical protein]'
         if 'organism' in seq.annotations:
             cid += f' [{seq.annotations["organism"]}]'
-        cid += f' [{seq.id}_{loc}]'
-        if 'product' in feat.qualifiers:
-            cid += f' {feat.qualifiers["product"][0]}'
-        else:
-            cid += f' [hypothetical protein]'
 
     return cid
 
@@ -265,7 +265,7 @@ def genbank_to_phage_finder(gbkf):
             yield [seq.id, len(seq.seq), cid, feat.location.start, feat.location.end, fn]
     handle.close()
 
-def genbank_to_pandas(gbkf, mincontiglen, ignorepartials=True, convert_selenocysteine=False):
+def genbank_to_pandas(gbkf, mincontiglen=200, ignorepartials=False, convert_selenocysteine=False):
     """
     This is a bit of a specific format used by phage_boost. its a simple dataframe with a couple of
     additional columns:

@@ -7,7 +7,7 @@ import os
 import sys
 import gzip
 import argparse
-from .genbank import genbank_to_faa, genbank_to_fna, genbank_to_orfs, genbank_to_ptt, genbank_to_functions
+from .genbank import genbank_to_faa, genbank_to_fna, genbank_to_orfs, genbank_to_pandas, genbank_to_ptt, genbank_to_functions
 from .genbank import genbank_to_gff, genbank_to_phage_finder, genbank_seqio, genbank_to_amrfinder
 from Bio import SeqIO
 import logging
@@ -31,6 +31,7 @@ def run():
     parser.add_argument('-a', '--aminoacids', help="output file for the amino acid sequences")
     parser.add_argument('-n', '--nucleotide', help='output file for nucleotide sequence')
     parser.add_argument('-p', '--ptt', help='output file for the ptt protein table')
+    parser.add_argument('-t', '--tsv', help='output file for the tsv summary table')
     parser.add_argument('-o', '--orfs', help='output file for orfs')
     parser.add_argument('-f', '--functions', help='output file for two column table of [protein id, function]')
     parser.add_argument('-i', '--seqid', help='Only output these sequence ID(s) [multiple -i allowed]',
@@ -141,6 +142,16 @@ def run():
             for ln in r:
                 out.write("\t".join(map(str, ln)))
                 out.write("\n")
+        did = True
+
+    if args.tsv:
+        r = genbank_to_pandas(args.genbank)
+        logging.info(f"Writing tsv to {args.tsv}")
+        r.to_csv(args.tsv, sep=',')
+        # with open(args.tsv, 'w') as out:
+        #     for ln in r:
+        #         out.write("\t".join(map(str, ln)))
+        #         out.write("\n")
         did = True
 
     if args.functions:
